@@ -1,0 +1,3 @@
+/home/runner/BFScript/CMakeFiles/rebuild_cache.dir
+/home/runner/BFScript/CMakeFiles/main.dir
+/home/runner/BFScript/CMakeFiles/edit_cache.dir

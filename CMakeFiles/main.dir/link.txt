@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/main.dir/src/framework.cpp.o CMakeFiles/main.dir/src/interpreter.cpp.o CMakeFiles/main.dir/src/main.cpp.o CMakeFiles/main.dir/src/compiler/compiler.cpp.o  -o main 

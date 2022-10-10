@@ -1,0 +1,1 @@
+run = "cmake . && cmake --build . && ./main"
