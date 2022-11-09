@@ -1,5 +1,11 @@
 #include "../include/framework.hpp"
 
+bool Comment = true;
+
+int LogLevel = 0;
+
+#define WARN(msg, level) if (level > LogLevel) { std::cout << "WARN: " << msg << std::endl; }
+
 Instruction* Goto::Compile(Generator* gen, int* cptr, std::string& output) {
 	int pos = *cptr;
 
@@ -19,7 +25,7 @@ Instruction* Goto::Compile(Generator* gen, int* cptr, std::string& output) {
 
 	// Indent();
 	
-	output += gen->Indent() + "Goto " + std::to_string(Target) + ":\n" + gen->Indent() + '\t';
+	output += COMMENT(gen->Indent() + "Goto " + std::to_string(Target) + ":\n" + gen->Indent() + '\t');
 
 	for (int i = 0; i < dist; i++) {
 		output += higher ? '>' : '<';
@@ -46,7 +52,7 @@ void Set::Simulate(Generator* gen, int* cptr, bool memory) {
 Instruction* Set::Compile(Generator* gen, int* cptr, std::string& output) {
 	Goto(Owner, Target).Compile(gen, cptr, output);
 
-	output += gen->Indent() + "Set " + std::to_string(Target) + " = " + std::to_string(Value) + ":\n";
+	output += COMMENT(gen->Indent() + "Set " + std::to_string(Target) + " = " + std::to_string(Value) + ":\n");
 
 	gen->IndentLevel++;
 
@@ -76,9 +82,13 @@ void Copy::Simulate(Generator* gen, int* cptr, bool memory) {
 }
 
 Instruction* Copy::Compile(Generator* gen, int* cptr, std::string& output) {
-	output += gen->Indent() + "Copy " + std::to_string(Target) + " = Cell " + std::to_string(Source) + ":\n";
+	output += COMMENT(gen->Indent() + "Copy " + std::to_string(Target) + " = Cell " + std::to_string(Source) + ":\n");
 
 	gen->IndentLevel++;
+
+	Goto(Owner, Target).Compile(gen, cptr, output)->Simulate(gen, cptr);
+
+	output += gen->Indent() + "[-Clear]\n";
 
 	Goto(Owner, Source).Compile(gen, cptr, output)->Simulate(gen, cptr);
 
@@ -138,10 +148,14 @@ void Move::Simulate(Generator* gen, int* cptr, bool memory) {
 }
 
 Instruction* Move::Compile(Generator* gen, int* cptr, std::string& output) {
-	output += gen->Indent() + "Move " + std::to_string(Target) + " = Cell " + std::to_string(Source) + ":\n";
+	output += COMMENT(gen->Indent() + "Move " + std::to_string(Target) + " = Cell " + std::to_string(Source) + ":\n");
 
 	gen->IndentLevel++;
+	
+	Goto(Owner, Target).Compile(gen, cptr, output)->Simulate(gen, cptr);
 
+	output += gen->Indent() + "[-Clear]\n";
+	
 	Goto(Owner, Source).Compile(gen, cptr, output)->Simulate(gen, cptr);
 
 	output += gen->Indent() + "[\n";
@@ -180,7 +194,7 @@ Instruction* Add::Compile(Generator* gen, int* cptr, std::string& output) {
 
 	int bval = gen->Cells[B];
 
-	output += gen->Indent() + "Add " + std::to_string(A) + " = " + std::to_string(A) + " plus " + std::to_string(B) + ":\n";
+	output += COMMENT(gen->Indent() + "Add " + std::to_string(A) + " = " + std::to_string(A) + " plus " + std::to_string(B) + ":\n");
 
 	gen->IndentLevel++;
 
@@ -222,7 +236,7 @@ Instruction* Sub::Compile(Generator* gen, int* cptr, std::string& output) {
 
 	int ptr = *cptr;
 
-	output += gen->Indent() + "Sub " + std::to_string(A) + " = " + std::to_string(A) + " minus " + std::to_string(B) + ":\n";
+	output += COMMENT(gen->Indent() + "Sub " + std::to_string(A) + " = " + std::to_string(A) + " minus " + std::to_string(B) + ":\n");
 
 	gen->IndentLevel++;
 
@@ -266,7 +280,7 @@ Instruction* Mul::Compile(Generator* gen, int* cptr, std::string& output) {
 
 	int bval = gen->Cells[B];
 
-	output += gen->Indent() + "Mul " + std::to_string(A) + " = " + std::to_string(A) + " times " + std::to_string(B) + ":\n";
+	output += COMMENT(gen->Indent() + "Mul " + std::to_string(A) + " = " + std::to_string(A) + " times " + std::to_string(B) + ":\n");
 
 	gen->IndentLevel++;
 
@@ -335,9 +349,9 @@ void Div::Simulate(Generator* gen, int* cptr, bool memory) {
 }
 
 Instruction* Div::Compile(Generator* gen, int* cptr, std::string& output) {
-	std::cout << "A: " << gen->Cells[A] << "\n\n";
+	// std::cout << "A: " << gen->Cells[A] << "\n\n";
 
-	std::cout << "B: " << gen->Cells[B] << "\n\n";
+	// std::cout << "B: " << gen->Cells[B] << "\n\n";
 	
 	(new Move(gen->Layout, Location, A))->Compile(gen, cptr, output);
 
@@ -345,7 +359,7 @@ Instruction* Div::Compile(Generator* gen, int* cptr, std::string& output) {
 	
 	Goto(Owner, Location).Compile(gen, cptr, output)->Simulate(gen, cptr);
 
-	output += gen->Indent() + "Div " + std::to_string(A) + " divided by " + std::to_string(B) + ":\n";
+	output += COMMENT(gen->Indent() + "Div " + std::to_string(A) + " divided by " + std::to_string(B) + ":\n");
 
 	gen->IndentLevel++;
 
@@ -374,7 +388,7 @@ Instruction* Compare::Compile(Generator* gen, int* cptr, std::string& output) {
 
 	int ptr = *cptr;
 
-	output += gen->Indent() + "Compare " + std::to_string(B) + " = " + std::to_string(A) + " != " + std::to_string(B) + ":\n";
+	output += COMMENT(gen->Indent() + "Compare " + std::to_string(B) + " = " + std::to_string(A) + " != " + std::to_string(B) + ":\n");
 
 	gen->IndentLevel++;
 
@@ -424,7 +438,7 @@ void Negate::Simulate(Generator* gen, int* cptr, bool memory) {
 Instruction* Negate::Compile(Generator* gen, int* cptr, std::string& output) {
 	int aval = gen->Cells[A];
 
-	output += gen->Indent() + "Negate " + std::to_string(A) + " (Destroys cell to the right):\n";
+	output += COMMENT(gen->Indent() + "Negate " + std::to_string(A) + " (Destroys cell to the right):\n");
 
 	gen->IndentLevel++;
 
@@ -455,7 +469,7 @@ Instruction* If::Compile(Generator* gen, int* cptr, std::string& output) {
 	
 	Goto(Owner, Condition).Compile(gen, &ptr, output)->Simulate(gen, cptr);
 
-	output += gen->Indent() + "If " + std::to_string(Condition) + ":\n";
+	output += COMMENT(gen->Indent() + "If " + std::to_string(Condition) + ":\n");
 
 	output += gen->Indent() + "[\n";
 
@@ -485,16 +499,140 @@ Instruction* If::Compile(Generator* gen, int* cptr, std::string& output) {
 	return this;
 }
 
+void Loop::Simulate(Generator* gen, int* cptr, bool memory) {
+	*cptr = Condition;
+
+	// Fix accuracy later
+	if (memory)
+		gen->Set(Condition, 0);
+}
+
+Instruction* Loop::Compile(Generator* gen, int* cptr, std::string& output) {
+	int ptr = *cptr;
+	
+	Goto(Owner, Condition).Compile(gen, &ptr, output)->Simulate(gen, cptr);
+
+	output += COMMENT(gen->Indent() + "Loop " + std::to_string(Condition) + ":\n");
+
+	output += gen->Indent() + "[\n";
+
+	gen->IndentLevel++;
+
+	for (Instruction* ins : Br->Data) {
+		//if (gen->Cells[Condition] != 0)
+			//ins->Compile(gen, cptr, output)->Simulate(gen, cptr, true);
+		//else
+			ins->Compile(gen, cptr, output)->Simulate(gen, cptr, true);
+
+		/*if (gen->Cells[Condition])
+			ins->Simulate(gen, &gen->Cell);*/
+	}
+
+	//									&ptr?
+	Goto(Owner, Condition).Compile(gen, cptr, output)->Simulate(gen, cptr);
+
+	// output += gen->Indent() + "[-Clear]\n";
+
+	gen->IndentLevel--;
+	
+	output += gen->Indent() + "]\n";
+
+	return this;
+}
+
 Instruction* Output::Compile(Generator* gen, int* cptr, std::string& output) {
 	Goto(Owner, A).Compile(gen, cptr, output)->Simulate(gen, cptr);
 	
-	output += gen->Indent() + "Output <" + std::to_string(A) + "> .";
+	output += COMMENT(gen->Indent() + "Output (" + std::to_string(A) + ") ") + ".\n";
+
+	return this;
+}
+
+/* Cell map
+	1 1 0 4 0 6 0
+      ^
+	
+	result
+	
+	1 1 0 0 0 2 0
+	  ^
+	---------
+
+	1 1 0 6 0 5 0
+	  ^
+
+	result
+	
+	1 1 0 1 0 0 0
+	    ^    
+*/
+void Distance::Simulate(Generator* gen, int* cptr, bool memory) {
+	*cptr = Location + 2;
+	
+	if (gen->Cells[A] > gen->Cells[B]) {
+		if (memory) {
+			gen->Set(Location + 3, gen->Cells[A] - gen->Cells[B]);
+			
+			gen->Set(Location + 5, 0);
+		}
+
+		// *cptr = Location + 2;
+		
+		return;
+	}
+
+	if (gen->Cells[A] < gen->Cells[B]) {
+		if (memory) {
+			gen->Set(Location + 3, 0);
+			
+			gen->Set(Location + 5, gen->Cells[B] - gen->Cells[A]);
+		}
+
+		// *cptr = Location + 1;
+		
+		return;
+	}
+
+	if (memory) {
+		gen->Set(Location + 3, 0);
+		
+		gen->Set(Location + 5, gen->Cells[B] - gen->Cells[A]);
+	}
+	
+	// *cptr = Location + 2;
+		
+	return;
+}
+
+Instruction* Distance::Compile(Generator* gen, int* cptr, std::string& output) {
+	// Goto(Owner, B).Compile(gen, cptr, output)->Simulate(gen, cptr);
+
+	output += COMMENT(gen->Indent() + "Distance (" + std::to_string(Location) + ") 1 1 0 x 0 x 0 = " + std::to_string(A) + " cmp " + std::to_string(B) + ":\n");
+
+	for (int i = 0; i < 6; i++) {
+		Set(Owner, Location + i, 0).Compile(gen, cptr, output)->Simulate(gen, cptr, true);
+	}
+
+	Set(Owner, Location, 1).Compile(gen, cptr, output)->Simulate(gen, cptr, true);
+
+	Set(Owner, Location + 1, 1).Compile(gen, cptr, output)->Simulate(gen, cptr, true);
+
+	Move(Owner, Location + 3, A).Compile(gen, cptr, output)->Simulate(gen, cptr, true);
+
+	Move(Owner, Location + 5, B).Compile(gen, cptr, output)->Simulate(gen, cptr, true);
+
+	Goto(Owner, Location + 3).Compile(gen, cptr, output)->Simulate(gen, cptr);
+
+	output += gen->Indent() + "[->>[-[<]]<]<<<[>]";
 
 	return this;
 }
 
 std::string Generator::Indent() {
 	std::string indent = "";
+
+	if (! Comment)
+		return "";
 
 	for (int i = 0; i < IndentLevel; i++) {
 		 indent += '\t';

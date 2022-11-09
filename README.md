@@ -13,6 +13,8 @@ The language itself was put together extremely fast, so right now not much is su
 
 `let i = 15`
 
+`i = i - 1`
+
 ## Output
 
 `print EXPRESSION`
@@ -23,7 +25,11 @@ printing simply outputs a cell from brainfuck using the . command, so outputting
 
 `if (i == 15) { print i + 50 }`
 
-Only == is implemented right now.
+Only == and > are implemented right now.
+
+## While statements
+
+`while (i > 0) { print i + 65; i = i - 1; }`
 
 # Examples
 
@@ -35,5 +41,6 @@ Only == is implemented right now.
 - [ ] Input
 - [ ] Functions
 - [ ] Loops
+- [ ] Operators
 - [ ] Standard library
 - [ ] ? Native bindings ?

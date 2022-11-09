@@ -50,6 +50,29 @@ int Compiler::Expression(Expr* expr, Branch* branch) {
 			return cells + 3 + 5;
 		}
 
+		if (expr->Op.Compare<string>("Op", "=")) {
+			branch->Add(new Move(branch, Variables[expr->Value.Convert<string>()], Expression(expr->Right, branch)));
+
+			return Variables[expr->Value.Convert<string>()];
+		}
+
+		if (expr->Op.Compare<string>("Op", ">")) {
+			int cells = Memory.Allocate(7); // only 5 needed
+				
+			int left = Expression(expr->Left, branch);
+
+			int right = Expression(expr->Right, branch);
+
+			branch->Add(new Distance(branch, left, right, cells));
+
+			Memory.Free(cells, 2);
+
+			Memory.Free(cells + 4, 3);
+			
+			return cells + 3;
+		}
+			
+
 		if (expr->Op.Compare<string>("Op", "==")) {
 			int cell = Memory.Allocate(2);
 
@@ -92,7 +115,7 @@ void Compiler::Statement(Stmt* stmt, Branch* branch) {
 	if (stmt->Type == StmtType::Variable) {
 		int cell = Memory.Allocate();
 
-		std::cout << "Variable " << stmt->Subject.Convert<string>() << " = Cell " << cell << "\n";
+		// std::cout << "Variable " << stmt->Subject.Convert<string>() << " = Cell " << cell << "\n";
 		
 		Variables[stmt->Subject.Convert<string>()] = cell;
 
@@ -112,6 +135,22 @@ void Compiler::Statement(Stmt* stmt, Branch* branch) {
 
 		branch->Add(new If(branch, cond , block));
 
+		return;
+	}
+
+	if (stmt->Type == StmtType::While) {
+		Branch* block = new Branch(); // block->Add
+
+		int cond = Expression(stmt->Condition, branch);
+		
+		for (Stmt* st : stmt->Block) {
+			Statement(st, block);
+		}
+
+		block->Add(new Move(block, cond, Expression(stmt->Condition, block)));
+
+		branch->Add(new Loop(branch, cond, block));
+		
 		return;
 	}
 

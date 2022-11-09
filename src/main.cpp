@@ -38,15 +38,25 @@ int main() {
 		code += c;
 	}
 
+	// code = " let i = 57; while (i > 47) { print i; i = i - 1; }";
+
 	Compiler compiler = Compiler(code);
 	
 	std::ofstream out = std::ofstream("output.bf");
+	
+	std::string output = compiler.Compile();
 
-	out << compiler.Compile() << "\n";
+	out << output << "\n";
 
 	out.close();
 
-	std::cout << "Success! Your compiled brainf* is in output.bf!\n";
+	std::cout << "Success! Your compiled brainf* is in output.bf!\n\nOutput:\n";
+
+	Interpreter interpreter = Interpreter();
+
+	interpreter.Run(output);
+
+	std::cout << "\n";
 
 	return 0;
 } 

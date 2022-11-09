@@ -6,6 +6,7 @@ enum class StmtType {
 	Variable,
 	Expression,
 	If,
+	While,
 	Print
 };
 
@@ -136,10 +137,57 @@ class Parser {
 
 			return result;
 		}
+
+		if (Lex.PeekToken().Convert<string>() == "while") {
+			Lex.GetToken();
+
+			Stmt* result = new Stmt(StmtType::While);
+
+			if (Lex.GetToken().Type != "LParen") {
+				std::cout << "Expected (\n";
+				
+				throw new std::exception();
+			}
+
+			result->Condition = Compare();
+
+			if (Lex.GetToken().Type != "RParen") {
+				std::cout << "Expected )\n";
+				
+				throw new std::exception();
+			}
+
+			if (Lex.GetToken().Type != "LCurly") {
+				std::cout << "Expected {\n";
+				
+				throw new std::exception();
+			}
+
+			std::vector<Stmt*> block = std::vector<Stmt*>();
+
+			while (Lex.PeekToken().Type != "RCurly") {
+				block.push_back(Statement());
+
+				if (Lex.PeekToken().Type == "EOF") {
+					std::cout << "Expected }\n";
+				
+					throw new std::exception();
+				}
+			}
+
+			Lex.GetToken();
+
+			result->Block = block;
+
+			if (Lex.PeekToken().Type == "Semicolon")
+			Lex.GetToken();
+
+			return result;
+		}
 		
 		Stmt* result = new Stmt(StmtType::Expression);
 
-		result->Expression = Compare();
+		result->Expression = Assign();
 
 		if (Lex.PeekToken().Type == "Semicolon")
 			Lex.GetToken();
@@ -153,7 +201,7 @@ class Parser {
 
 			Token op = Lex.GetToken();
 
-			Expr* value = Add();
+			Expr* value = Compare();
 
 			Expr* result = new Expr(ExprType::Binary);
 
@@ -166,13 +214,25 @@ class Parser {
 			return result;
 		}
 
-		return Add();
+		return Compare();
 	}
 
 	Expr* Compare() {
 		Expr* left = Add();
 
 		if (Lex.PeekToken().Compare<string>("Op", "==")) {
+			Expr* result = new Expr(ExprType::Binary);
+
+			result->Left = left;
+
+			result->Op = Lex.GetToken();
+
+			result->Right = Add();
+
+			return result;
+		}
+
+		if (Lex.PeekToken().Compare<string>("Op", ">")) {
 			Expr* result = new Expr(ExprType::Binary);
 
 			result->Left = left;

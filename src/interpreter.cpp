@@ -74,7 +74,7 @@ void Interpreter::Run(std::string code) {
 			Cells[Pointer] = std::cin.get();
 	
 		if (c == '.')
-			std::cout << Cells[Pointer];
+			std::cout << (char) Cells[Pointer];
 	}
 }
 

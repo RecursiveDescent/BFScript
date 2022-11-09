@@ -6,6 +6,10 @@
 
 #include "interpreter.hpp"
 
+extern bool Comment;
+
+#define COMMENT(text) (Comment ? text : "")
+
 class Branch;
 
 class Generator;
@@ -228,6 +232,24 @@ class If : public Instruction {
 	}
 };
 
+class Loop : public Instruction {
+	public:
+
+	int Condition;
+
+	void Simulate(Generator* gen, int* cptr, bool memory = false) override;
+
+	Instruction* Compile(Generator* gen, int* cptr, std::string& output) override;
+
+	Loop(Branch* owner, int condition, Branch* br) {
+		Owner = owner;
+
+		Condition = condition;
+
+		Br = br;
+	}
+};
+
 class Compare : public Instruction {
 	public:
 
@@ -280,6 +302,30 @@ class Output : public Instruction {
 		Owner = owner;
 
 		A = a;
+	}
+};
+
+class Distance : public Instruction {
+	public:
+
+	int A;
+
+	int B;
+
+	int Location; // + 3 = A, + 5 = B
+
+	void Simulate(Generator* gen, int* cptr, bool memory = false) override;
+
+	Instruction* Compile(Generator* gen, int* cptr, std::string& output) override;
+
+	Distance(Branch* owner, int a, int b, int location) {
+		Owner = owner;
+
+		A = a;
+
+		B = b;
+
+		Location = location;
 	}
 };
 
